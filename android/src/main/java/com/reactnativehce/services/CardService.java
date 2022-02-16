@@ -18,6 +18,35 @@ public class CardService extends HostApduService {
     private static byte[] SELECT_APDU_HEADER = BinaryUtils.HexStringToByteArray("00A40400");
     private static final byte[] CMD_OK = BinaryUtils.HexStringToByteArray("9000");
     private static final byte[] CMD_ERROR = BinaryUtils.HexStringToByteArray("6A82");
+    private static final byte[] PPSE_APDU_SELECT_RESP = {
+    (byte) 0x6F,  // FCI Template
+    (byte) 0x23,  // length = 35
+    (byte) 0x84,  // DF Name
+    (byte) 0x0E,  // length("2PAY.SYS.DDF01")
+    // Data (ASCII values of characters used):
+    '2', 'P', 'A', 'Y', '.', 'S', 'Y', 'S', '.', 'D', 'D', 'F', '0', '1',
+    (byte) 0xA5, // FCI Proprietary Template
+    (byte) 0x11, // length = 17
+    (byte) 0xBF, // FCI Issuer Discretionary Data
+    (byte) 0x0C, // length = 12
+    (byte) 0x0E,
+    (byte) 0x61, // Directory Entry
+    (byte) 0x0C, // Entry length = 12
+    (byte) 0x4F, // ADF Name
+    (byte) 0x07, // ADF Length = 7
+    // Tell the POS (point of sale terminal) that we support the standard
+    // Visa credit or debit applet: A0000000031010
+    // Visa's RID (Registered application provider IDentifier) is 5 bytes:
+    (byte) 0xA0, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x03,
+    // PIX (Proprietary application Identifier eXtension) is the last 2 bytes.
+    // 10 10 (means visa credit or debit)
+    (byte) 0x10, (byte) 0x10,
+    (byte) 0x87,  // Application Priority Indicator
+    (byte) 0x01,  // length = 1
+    (byte) 0x01,
+    (byte) 0x90, // SW1  (90 00 = Success)
+    (byte) 0x00  // SW2
+  };
 
     private ArrayList<IHCEApplication> registeredHCEApplications = new ArrayList<IHCEApplication>();
     private IHCEApplication currentHCEApplication = null;
@@ -25,6 +54,7 @@ public class CardService extends HostApduService {
     @Override
     public byte[] processCommandApdu(byte[] commandApdu, Bundle extras) {
       if (currentHCEApplication != null) {
+        Log.i(TAG, "ok do do");
         return currentHCEApplication.processCommand(commandApdu);
       }
 
@@ -33,8 +63,10 @@ public class CardService extends HostApduService {
       if (Arrays.equals(SELECT_APDU_HEADER, header)) {
         for (IHCEApplication app : registeredHCEApplications) {
           if (app.assertSelectCommand(commandApdu)) {
+            Log.i(TAG,BinaryUtils.ByteArrayToHexString(PPSE_APDU_SELECT_RESP));
             currentHCEApplication = app;
-            return CMD_OK;
+           return CMD_OK;
+//             return PPSE_APDU_SELECT_RESP;
           }
         }
       }
@@ -44,7 +76,7 @@ public class CardService extends HostApduService {
 
     @Override
     public void onCreate() {
-      Log.d(TAG, "Starting service");
+      Log.i(TAG, "Starting service");
 
       SharedPreferences prefs = getApplicationContext()
         .getSharedPreferences("hce", Context.MODE_PRIVATE);
@@ -57,6 +89,6 @@ public class CardService extends HostApduService {
 
     @Override
     public void onDeactivated(int reason) {
-      Log.d(TAG, "Finishing service: " + reason);
+      Log.i(TAG, "Finishing service: " + reason);
     }
 }

@@ -28,6 +28,8 @@ public class NFCTagType4 implements IHCEApplication {
   private boolean READ_CAPABILITY_CONTAINER_CHECK = false;
 
   public boolean assertSelectCommand(byte[] command) {
+   Log.i(TAG, "assertSelectCommand 00A4040007D276000085010100");
+   Log.i(TAG,BinaryUtils.ByteArrayToHexString(command));
     byte[] selectCommand = BinaryUtils.HexStringToByteArray("00A4040007D276000085010100");
     return Arrays.equals(command, selectCommand);
   }
