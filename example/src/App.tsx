@@ -25,6 +25,10 @@ export default function App() {
   const startSimulation = useCallback(async () => {
     const tag = new NFCTagType4(contentType, content);
     simulationInstance.current = await new HCESession(tag).start();
+    console.log(
+      'is support NFC HCE',
+      await simulationInstance.current?.checkSupport()
+    );
     setSimulationEnabled(simulationInstance.current.active);
   }, [setSimulationEnabled, simulationInstance, content, contentType]);
 

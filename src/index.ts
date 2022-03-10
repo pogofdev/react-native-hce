@@ -23,6 +23,22 @@ class HCESession {
   };
 
   /**
+   * Check if device support Android NFC HCE feature
+   */
+
+  checkSupport = async () => {
+    if (Platform.OS !== 'android') {
+      throw new Error('react-native-hce does not support this platform');
+    }
+
+    if (this.application instanceof NFCTagType4) {
+      return await Hce.checkSupport();
+    }
+
+    throw new Error('Unrecognized app type.');
+  };
+
+  /**
    * Starts the HCE session.
    */
   start = async () => {
